@@ -150,10 +150,38 @@ def search_for_hexa_num(instruction):
     num_prefix = instruction.find('x')
     instruction = instruction.rstrip()
     return instruction[num_prefix+1:]
+
+def search_for_label_with_one_register(instruction):
+    """
+    get an instruction which has a register,return the label name(string)
+    """
+    register_index = instruction.find('R')
+    instruction = instruction[register_index+3:]
+    label = instruction.strip()  #remove all whitespaces
+    return label
+
 # transforming functions
-#
-from assist_func import *
-def convert_to_machine_lang(one_instruction):
+
+
+label_dict = {}   # store labels and according position
+#keys are labels,values are positions
+operators = ['ADD','AND','NOT','LD','LDR','LDI','LEA','ST','STR','STI',"TRAP",'BR'
+,'JMP','JSR','RET','.ORIG','.FILL','BLKW','.STRINGZ','.END','HALT','GETC','OUT','PUTS'
+'IN','PUTSP','RIT','JSRR']
+#Note:in operators,'.STRINGZ' may be wrong
+
+
+#labels processing function 
+#single instruction includes '\n' ending ;process instruction to get labels
+def  get_label(single_instruction,cur_position):
+    single_instruction = single_instruction.strip()#remove left and right whitespaces
+    first_whitespace_index = single_instruction.find(' ')
+    first_word = single_instruction[:first_whitespace_index]
+    if first_word not in operators:
+        label_dict[first_word] = cur_position
+
+
+def convert_to_machine_lang(one_instruction,cur_position):
     assert type(one_instruction)==str ,'one_insruction must be string'
     if '.ORIG' in one_instruction:
         x_index = one_instruction.rfind('x')
@@ -186,10 +214,14 @@ def convert_to_machine_lang(one_instruction):
         #number condition
         if one_instruction.find('#')>0:
             number = search_for_deci_num(one_instruction)
-            num_bin = deci_trans_to_imm_with_nine_digits(number)
-            return operator_bin+register_1_bin+num_bin+'\n'  
-#TODO:label condition   
-       
+            num_bin = deci_trans_to_imm_with_nine_digits(number)  
+        #label condition
+        else:
+            label = search_for_label_with_one_register(one_instruction)
+            assert label in label_dict,  "label cannot be found in dictionary"
+            position_moves = label_dict[label]-cur_position-1
+            num_bin = deci_trans_to_imm_with_nine_digits(position_moves)
+        return operator_bin+register_1_bin+num_bin+'\n'    
     elif 'LDR' in one_instruction or 'STR' in one_instruction:
         if 'LDR' in one_instruction:
             operator_bin = '0110'
@@ -206,14 +238,7 @@ def convert_to_machine_lang(one_instruction):
         if one_instruction.find('x')>0:  
             hexa_num_str = search_for_hexa_num(one_instruction)
             imm_bin      = hex_trans_to_imm_with_six_digits(hexa_num_str) 
-        return operator_bin+register_1_bin+register_2_bin+imm_bin+'\n'                   
-    elif 'LDI' in one_instruction:
-        operator_bin = '1010'
-
-    
-    
-    
-    
+        return operator_bin+register_1_bin+register_2_bin+imm_bin+'\n'                       
     elif 'ADD'  in one_instruction or 'AND' in one_instruction:
         if 'ADD' in one_instruction:
             operator_bin = '0001'
@@ -286,21 +311,50 @@ def convert_to_machine_lang(one_instruction):
                 result += '0111011101110111'+'\n'
                 num -= 1
             return result    
-#TODO:.STRING            
+#TODO:.STRING      
 ##input part
-from convert import *
+
 one_line = ''
 all_inputs = ''
-user_defined_variables_statements = ''  # to store .FILL instruction
 result = ''
+single_instruction = ''
 while True:
     if '.END' in one_line:
         break
     one_line = input()
-    if '.FILL' in one_line:
-        user_defined_variables_statements += one_line 
-    result += convert_to_machine_lang(one_line)
-    all_inputs += one_line+'\n' 
-result = result [:len(result)-1]
-print(result)    
-# now have get all inputs in all_inputs string
+    all_inputs += one_line+'\n'
+# first loop to inspect all labels
+all_inputs_first = str(all_inputs)
+all_inputs_second = str(all_inputs)
+newline_index = all_inputs.find('\n')
+single_instruction = all_inputs[:newline_index+1]
+start_position_str = convert_to_machine_lang(single_instruction,'None')
+start_position     = int (start_position_str,16) 
+cur_position       = start_position
+#store start position of the instructions (in decimal format)
+while  all_inputs_first.find('\n')!= all_inputs_first.rfind('\n'):
+    newline_index      = all_inputs_first.find('\n')
+    single_instruction = all_inputs_first[:newline_index+1]
+    get_label(single_instruction,cur_position)
+    all_inputs_first   = all_inputs_first[newline_index+1:]
+    cur_position       += 1
+newline_index = all_inputs_first.find('\n')
+single_instruction = all_inputs_first[:newline_index]#the last instruction ,i.e. .END
+
+#second loop,to get converted instruction and print them
+result = ''
+cur_position = start_position# cur_position has refreshed
+while  all_inputs_second.find('\n')!= all_inputs_second.rfind('\n'):
+    newline_index      = all_inputs_second.find('\n')
+    single_instruction = all_inputs_second[:newline_index+1]
+#single instruction includes '\n' ending ;process instruction to get labels
+    result             += convert_to_machine_lang(single_instruction,cur_position)
+    all_inputs_second   = all_inputs_second[newline_index+1:]
+    cur_position       += 1
+newline_index = all_inputs_second.find('\n')
+single_instruction = all_inputs_second[:]#the last instruction ,i.e. .END
+result +=convert_to_machine_lang(single_instruction,cur_position)
+print(result[:-1])
+
+    
+# now have get all inputs in all_inputs string      

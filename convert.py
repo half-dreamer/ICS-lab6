@@ -1,7 +1,25 @@
 # transforming functions
-#
 from assist_func import *
-def convert_to_machine_lang(one_instruction):
+
+label_dict = {}   # store labels and according position
+#keys are labels,values are positions
+operators = ['ADD','AND','NOT','LD','LDR','LDI','LEA','ST','STR','STI',"TRAP",'BR'
+,'JMP','JSR','RET','.ORIG','.FILL','BLKW','.STRINGZ','.END','HALT','GETC','OUT','PUTS'
+'IN','PUTSP','RIT','JSRR']
+#Note:in operators,'.STRINGZ' may be wrong
+
+
+#labels processing function 
+#single instruction includes '\n' ending ;process instruction to get labels
+def  get_label(single_instruction,cur_position):
+    single_instruction = single_instruction.strip()#remove left and right whitespaces
+    first_whitespace_index = single_instruction.find(' ')
+    first_word = single_instruction[:first_whitespace_index]
+    if first_word not in operators:
+        label_dict[first_word] = cur_position
+
+
+def convert_to_machine_lang(one_instruction,cur_position):
     assert type(one_instruction)==str ,'one_insruction must be string'
     if '.ORIG' in one_instruction:
         x_index = one_instruction.rfind('x')
@@ -34,10 +52,14 @@ def convert_to_machine_lang(one_instruction):
         #number condition
         if one_instruction.find('#')>0:
             number = search_for_deci_num(one_instruction)
-            num_bin = deci_trans_to_imm_with_nine_digits(number)
-            return operator_bin+register_1_bin+num_bin+'\n'  
-#TODO:label condition   
-       
+            num_bin = deci_trans_to_imm_with_nine_digits(number)  
+        #label condition
+        else:
+            label = search_for_label_with_one_register(one_instruction)
+            assert label in label_dict,  "label cannot be found in dictionary"
+            position_moves = label_dict[label]-cur_position-1
+            num_bin = deci_trans_to_imm_with_nine_digits(position_moves)
+        return operator_bin+register_1_bin+num_bin+'\n'    
     elif 'LDR' in one_instruction or 'STR' in one_instruction:
         if 'LDR' in one_instruction:
             operator_bin = '0110'
@@ -54,14 +76,7 @@ def convert_to_machine_lang(one_instruction):
         if one_instruction.find('x')>0:  
             hexa_num_str = search_for_hexa_num(one_instruction)
             imm_bin      = hex_trans_to_imm_with_six_digits(hexa_num_str) 
-        return operator_bin+register_1_bin+register_2_bin+imm_bin+'\n'                   
-    elif 'LDI' in one_instruction:
-        operator_bin = '1010'
-
-    
-    
-    
-    
+        return operator_bin+register_1_bin+register_2_bin+imm_bin+'\n'                       
     elif 'ADD'  in one_instruction or 'AND' in one_instruction:
         if 'ADD' in one_instruction:
             operator_bin = '0001'
@@ -103,13 +118,28 @@ def convert_to_machine_lang(one_instruction):
     elif 'HALT' in one_instruction:
         return '1111000000100101'+'\n'  
 #TODO: BR
+    elif 'BR' in one_instruction:
+        
     elif "JMP" in one_instruction:
         operator_bin = '1100'
         register_1_bin = search_for_1_register(one_instruction)
         return operator_bin+'000'+register_1_bin+'000000'+'\n'
     elif 'RET' in one_instruction:
-        return '1100000111000000'+'\n'
-#TODO: JSR remeber to distinguish between 'JSR' and 'JSRR'        
+        return '1100000111000000'+'\n' 
+    elif 'JSR' in one_instruction and 'JSRR' not in one_instruction:
+        operator_bin = '0100'  
+        #number condition
+        if one_instruction.find('#')>0:
+            number = search_for_deci_num(one_instruction)
+            num_bin = deci_trans_to_imm_with_eleven_digits(number)  
+        #label condition
+        else:
+            label = search_for_label_with_one_register(one_instruction)
+            assert label in label_dict,  "label cannot be found in dictionary"
+            position_moves = label_dict[label]-cur_position-1
+            num_bin = deci_trans_to_imm_with_eleven_digits(position_moves)
+        return operator_bin+'1'+num_bin+'\n'
+
     elif 'JSRR' in one_instruction:   
         operator_bin = '0100'
         new_index    = one_instruction.find('R')

@@ -88,9 +88,19 @@ def deci_trans_to_imm_with_nine_digits(num):
     """        
     return (bin(((1 << 9) - 1) & num)[2:]).zfill(9)
 
+def deci_trans_to_imm_with_eleven_digits(num):
+    """
+    transform a decimal number(int) into a binary immediate number(string)(eleven digits)
+    >>> deci_trans_to_imm_with_eleven_digits(1)
+    '00000000001'
+    >>> deci_trans_to_imm_with_eleven_digits(-1)
+    '11111111111'
+    """        
+    return (bin(((1 << 11) - 1) & num)[2:]).zfill(11)    
+
 def deci_trans_to_imm_with_sixteen_digits(num):
     """
-    transform a decimal number(int) into a binary immediate number(string)(nine digits)
+    transform a decimal number(int) into a binary immediate number(string)(sixteen digits)
     >>> deci_trans_to_imm_with_sixteen_digits(1)
     '0000000000000001'
     >>> deci_trans_to_imm_with_sixteen_digits(-1)
@@ -150,3 +160,13 @@ def search_for_hexa_num(instruction):
     num_prefix = instruction.find('x')
     instruction = instruction.rstrip()
     return instruction[num_prefix+1:]
+
+def search_for_label_with_one_register(instruction):
+    """
+    get an instruction which has a register,return the label name(string)
+    """
+    register_index = instruction.find('R')
+    instruction = instruction[register_index+3:]
+    label = instruction.strip()  #remove all whitespaces
+    return label
+
