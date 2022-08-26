@@ -17,6 +17,43 @@ def hex_trans_to_bin_three_digits(single_hex_digit):
     '''
     return hex_trans_to_bin_four_digits(single_hex_digit)[1:]
 
+def hex_trans_to_imm_with_five_digits(num):
+    """
+    transform a hexadecimal number(string!!!) into a binary immediate number(int)
+    >>> hex_trans_to_imm_with_five_digits('3')
+    '00011'
+    >>> hex_trans_to_imm_with_five_digits('-1')
+    '11111'
+    """  
+    return  (bin(((1 << 5) - 1)& int(num,16))[2:]).zfill(5)
+
+
+def hex_trans_to_imm_with_six_digits(num):
+    """
+    transform a hexadecimal number(string!!!) into a binary immediate number(int)
+    >>> hex_trans_to_imm_with_six_digits('3')
+    '000011'
+    >>> hex_trans_to_imm_with_six_digits('-1')
+    '111111'
+    """  
+    return  (bin(((1 << 6) - 1)& int(num,16))[2:]).zfill(6)    
+
+def hex_trans_to_imm_with_eight_digits(num):
+    """
+    transform a hexadecimal number(string!!!) into a binary immediate number(int)
+    >>> hex_trans_to_imm_with_eight_digits('3')
+    '00000011'
+    """  
+    return  (bin(((1 << 8) - 1)& int(num,16))[2:]).zfill(8)
+
+def hex_trans_to_imm_with_sixteen_digits(num):
+    """
+    transform a hexadecimal number(string!!!) into a binary immediate number(int)
+    >>> hex_trans_to_imm_with_sixteen_digits('3')
+    '0000000000000011'
+    """  
+    return  (bin(((1 << 16) - 1)& int(num,16))[2:]).zfill(16)       
+
 def deci_trans_to_imm_with_five_digits(num):
     """
     transform a decimal number(int) into a binary immediate number(string)(five digits)
@@ -33,9 +70,9 @@ def deci_trans_to_imm_with_five_digits(num):
 def deci_trans_to_imm_with_six_digits(num):
     """
     transform a decimal number(int) into a binary immediate number(string)(six digits)
-    >>> deci_trans_to_imm_with_five_digits(1)
+    >>> deci_trans_to_imm_with_six_digits(1)
     '000001'
-    >>> deci_trans_to_imm_with_five_digits(-1)
+    >>> deci_trans_to_imm_with_six_digits(-1)
     '111111'
     """        
     return (bin(((1 << 6) - 1) & num)[2:]).zfill(6)
@@ -44,12 +81,22 @@ def deci_trans_to_imm_with_six_digits(num):
 def deci_trans_to_imm_with_nine_digits(num):
     """
     transform a decimal number(int) into a binary immediate number(string)(nine digits)
-    >>> deci_trans_to_imm_with_five_digits(1)
+    >>> deci_trans_to_imm_with_nine_digits(1)
     '000000001'
-    >>> deci_trans_to_imm_with_five_digits(-1)
+    >>> deci_trans_to_imm_with_nine_digits(-1)
     '111111111'
     """        
     return (bin(((1 << 9) - 1) & num)[2:]).zfill(9)
+
+def deci_trans_to_imm_with_sixteen_digits(num):
+    """
+    transform a decimal number(int) into a binary immediate number(string)(nine digits)
+    >>> deci_trans_to_imm_with_sixteen_digits(1)
+    '0000000000000001'
+    >>> deci_trans_to_imm_with_sixteen_digits(-1)
+    '1111111111111111'
+    """        
+    return (bin(((1 << 16) - 1) & num)[2:]).zfill(16)
 
 def search_for_1_register(instruction):
     """
@@ -95,3 +142,11 @@ def search_for_deci_num(instruction):
             if is_minus:
                 num = -num     
             return num        
+
+def search_for_hexa_num(instruction):
+    """
+    return a string(important!) of hexadecimal number in the instruction
+    """            
+    num_prefix = instruction.find('x')
+    instruction = instruction.rstrip()
+    return instruction[num_prefix+1:]
