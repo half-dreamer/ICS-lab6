@@ -1,3 +1,6 @@
+
+
+
 def  hex_trans_to_bin_four_digits(single_hex_digit):
     """transform a single hexadecimal digit (string type) to
         a four-digit-long binary number
@@ -88,9 +91,19 @@ def deci_trans_to_imm_with_nine_digits(num):
     """        
     return (bin(((1 << 9) - 1) & num)[2:]).zfill(9)
 
+def deci_trans_to_imm_with_eleven_digits(num):
+    """
+    transform a decimal number(int) into a binary immediate number(string)(eleven digits)
+    >>> deci_trans_to_imm_with_eleven_digits(1)
+    '00000000001'
+    >>> deci_trans_to_imm_with_eleven_digits(-1)
+    '11111111111'
+    """        
+    return (bin(((1 << 11) - 1) & num)[2:]).zfill(11)    
+
 def deci_trans_to_imm_with_sixteen_digits(num):
     """
-    transform a decimal number(int) into a binary immediate number(string)(nine digits)
+    transform a decimal number(int) into a binary immediate number(string)(sixteen digits)
     >>> deci_trans_to_imm_with_sixteen_digits(1)
     '0000000000000001'
     >>> deci_trans_to_imm_with_sixteen_digits(-1)
@@ -159,6 +172,37 @@ def search_for_label_with_one_register(instruction):
     instruction = instruction[register_index+3:]
     label = instruction.strip()  #remove all whitespaces
     return label
+
+def get_sign_bits(instruction):
+    """
+    get an BR instruction and return the sign bits 
+    """    
+    instruction = instruction.strip()
+    B_index = instruction.find('B')
+    whitespace_index = instruction.find(' ')
+    operator  = instruction[B_index:whitespace_index]#whitespace excluded
+    neg_bit,zero_bit,posi_bit = '0','0','0'
+    if operator == 'BR':
+        return '111'
+    else:
+        if 'n' in operator:
+            neg_bit = '1'
+        if 'z' in operator:
+            zero_bit = '1'
+        if 'p' in operator:
+            posi_bit = '1'
+        return neg_bit+zero_bit+posi_bit   
+def BR_get_label(instruction):
+    """
+    get an BR instruction and return its label(offset)(string)
+    """             
+    instruction = instruction.strip()
+    whitespace_index = instruction.find(' ')
+    instruction = instruction[whitespace_index:]
+    label = instruction.strip()
+    return label
+
+
 
 # transforming functions
 
@@ -279,14 +323,41 @@ def convert_to_machine_lang(one_instruction,cur_position):
         return '1111000000100100'+'\n'  
     elif 'HALT' in one_instruction:
         return '1111000000100101'+'\n'  
-#TODO: BR
+    elif 'BR' in one_instruction:
+        operator_bin = '0000'
+        sign_bin = get_sign_bits(one_instruction)
+        #number condition
+        if one_instruction.find('#')>0:
+            number = search_for_deci_num(one_instruction)
+            num_bin = deci_trans_to_imm_with_nine_digits(number)  
+        #label condition
+        else:
+            label = BR_get_label(one_instruction)
+            assert label in label_dict,  "label cannot be found in dictionary"
+            position_moves = label_dict[label]-cur_position-1
+            num_bin = deci_trans_to_imm_with_nine_digits(position_moves)
+        return operator_bin+sign_bin+num_bin+'\n'
+        
     elif "JMP" in one_instruction:
         operator_bin = '1100'
         register_1_bin = search_for_1_register(one_instruction)
         return operator_bin+'000'+register_1_bin+'000000'+'\n'
     elif 'RET' in one_instruction:
-        return '1100000111000000'+'\n'
-#TODO: JSR remeber to distinguish between 'JSR' and 'JSRR'        
+        return '1100000111000000'+'\n' 
+    elif 'JSR' in one_instruction and 'JSRR' not in one_instruction:
+        operator_bin = '0100'  
+        #number condition
+        if one_instruction.find('#')>0:
+            number = search_for_deci_num(one_instruction)
+            num_bin = deci_trans_to_imm_with_eleven_digits(number)  
+        #label condition
+        else:
+            label = search_for_label_with_one_register(one_instruction)
+            assert label in label_dict,  "label cannot be found in dictionary"
+            position_moves = label_dict[label]-cur_position-1
+            num_bin = deci_trans_to_imm_with_eleven_digits(position_moves)
+        return operator_bin+'1'+num_bin+'\n'
+
     elif 'JSRR' in one_instruction:   
         operator_bin = '0100'
         new_index    = one_instruction.find('R')
@@ -303,6 +374,7 @@ def convert_to_machine_lang(one_instruction,cur_position):
             num = search_for_hexa_num(one_instruction)
             num_bin = hex_trans_to_imm_with_sixteen_digits(num)
         return num_bin+'\n' 
+#TODO:.BLKW cur_position is different from others    
     elif '.BLKW' in one_instruction:
         if one_instruction.find('#')>0:
             num = search_for_deci_num(one_instruction)
@@ -311,7 +383,8 @@ def convert_to_machine_lang(one_instruction,cur_position):
                 result += '0111011101110111'+'\n'
                 num -= 1
             return result    
-#TODO:.STRING      
+#TODO:.STRING   
+# 
 ##input part
 
 one_line = ''
@@ -357,4 +430,5 @@ result +=convert_to_machine_lang(single_instruction,cur_position)
 print(result[:-1])
 
     
-# now have get all inputs in all_inputs string      
+# now have get all inputs in all_inputs string         
+

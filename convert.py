@@ -117,8 +117,20 @@ def convert_to_machine_lang(one_instruction,cur_position):
         return '1111000000100100'+'\n'  
     elif 'HALT' in one_instruction:
         return '1111000000100101'+'\n'  
-#TODO: BR
     elif 'BR' in one_instruction:
+        operator_bin = '0000'
+        sign_bin = get_sign_bits(one_instruction)
+        #number condition
+        if one_instruction.find('#')>0:
+            number = search_for_deci_num(one_instruction)
+            num_bin = deci_trans_to_imm_with_nine_digits(number)  
+        #label condition
+        else:
+            label = BR_get_label(one_instruction)
+            assert label in label_dict,  "label cannot be found in dictionary"
+            position_moves = label_dict[label]-cur_position-1
+            num_bin = deci_trans_to_imm_with_nine_digits(position_moves)
+        return operator_bin+sign_bin+num_bin+'\n'
         
     elif "JMP" in one_instruction:
         operator_bin = '1100'
@@ -156,6 +168,7 @@ def convert_to_machine_lang(one_instruction,cur_position):
             num = search_for_hexa_num(one_instruction)
             num_bin = hex_trans_to_imm_with_sixteen_digits(num)
         return num_bin+'\n' 
+#TODO:.BLKW cur_position is different from others    
     elif '.BLKW' in one_instruction:
         if one_instruction.find('#')>0:
             num = search_for_deci_num(one_instruction)
