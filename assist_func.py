@@ -1,3 +1,8 @@
+from string import whitespace
+
+
+one_register_instructions = ['LD','LEA','STI','ST','LDI']
+
 def  hex_trans_to_bin_four_digits(single_hex_digit):
     """transform a single hexadecimal digit (string type) to
         a four-digit-long binary number
@@ -112,10 +117,20 @@ def search_for_1_register(instruction):
     """
     return the binary form of the first register
     """        
-    first_reg_index = instruction.find('R')
-    instruction = instruction[first_reg_index:]
-    register_1 = instruction[1]
-    register_1_bin = hex_trans_to_bin_three_digits(register_1)
+    instruction = instruction.strip()
+    whitespace_index = instruction.find(' ')
+    first_word    =  instruction[:whitespace_index]
+    if first_word in one_register_instructions:
+        first_reg_index = instruction.find('R')
+        instruction = instruction[first_reg_index:]
+        register_1 = instruction[1]
+        register_1_bin = hex_trans_to_bin_three_digits(register_1)
+    else:
+        instruction = instruction[whitespace_index:]
+        first_reg_index = instruction.find('R')
+        instruction = instruction[first_reg_index:]
+        register_1 = instruction[1]
+        register_1_bin = hex_trans_to_bin_three_digits(register_1)
     return register_1_bin
 
 def search_for_1_2_register(instruction):
@@ -165,19 +180,30 @@ def search_for_label_with_one_register(instruction):
     """
     get an instruction which has a register,return the label name(string)
     """
-    register_index = instruction.find('R')
-    instruction = instruction[register_index+3:]
-    label = instruction.strip()  #remove all whitespaces
-    return label
+    instruction = instruction.strip()
+    whitespace_index = instruction.find(' ')
+    first_word    =  instruction[:whitespace_index]
+    if first_word in one_register_instructions:
+        register_index = instruction.find('R')
+        instruction = instruction[register_index+3:]
+        label = instruction.strip()  #remove all whitespaces
+        return label
+    else:
+        instruction = instruction[whitespace_index:]
+        register_index = instruction.find('R')
+        instruction = instruction[register_index+3:]
+        label = instruction.strip()  #remove all whitespaces
+        return     label
 
 def get_sign_bits(instruction):
     """
     get an BR instruction and return the sign bits 
     """    
     instruction = instruction.strip()
-    B_index = instruction.find('B')
+    B_index = instruction.find('BR')
+    instruction = instruction[B_index:]
     whitespace_index = instruction.find(' ')
-    operator  = instruction[B_index:whitespace_index]#whitespace excluded
+    operator  = instruction[:whitespace_index]#whitespace excluded
     neg_bit,zero_bit,posi_bit = '0','0','0'
     if operator == 'BR':
         return '111'

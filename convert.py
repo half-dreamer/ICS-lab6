@@ -7,6 +7,8 @@ operators = ['ADD','AND','NOT','LD','LDR','LDI','LEA','ST','STR','STI',"TRAP",'B
 ,'JMP','JSR','RET','.ORIG','.FILL','.BLKW','.STRINGZ','.END','HALT','GETC','OUT','PUTS'
 'IN','PUTSP','RIT','JSRR']
 #Note:in operators,'.STRINGZ' may be wrong
+BR_collection = ['BR','BRn','BRz','BRp','BRnz','BRzp','BRnp','BRnzp']
+one_register_instruction = ['LD','LEA','STI','ST','LDI']
 
 
 #labels processing function 
@@ -14,7 +16,13 @@ operators = ['ADD','AND','NOT','LD','LDR','LDI','LEA','ST','STR','STI',"TRAP",'B
 def  get_label(single_instruction,cur_position):
     single_instruction = single_instruction.strip()#remove left and right whitespaces
     first_whitespace_index = single_instruction.find(' ')
+    first_word = single_instruction[:first_whitespace_index]
     if '.BLKW' in single_instruction:
+        #.BLKW has label condition
+        if single_instruction[:5] != '.BLKW':
+            first_word = single_instruction[:first_whitespace_index]
+            if first_word not in operators:
+                label_dict[first_word] = cur_position
         if single_instruction.find('#')>0:
             num = search_for_deci_num(single_instruction)
             cur_position -= 1
@@ -23,15 +31,20 @@ def  get_label(single_instruction,cur_position):
                 cur_position = cur_position+1
             return cur_position  
     elif '.ORIG' in single_instruction:
-        return cur_position -1            
+        return cur_position           
     elif '.STRINGZ' in single_instruction:
+        # .STRINGZ may have label
+        if single_instruction[:8] != '.STRINGZ':
+            first_word = single_instruction[:first_whitespace_index]
+            if first_word not in operators:
+                label_dict[first_word] = cur_position
         string = STRINGZ_get_string(single_instruction) 
         for i in range(len(string)):
             cur_position += 1     
         return cur_position
     elif single_instruction == '':
         return cur_position - 1   
-    elif 'BR' in single_instruction:
+    elif first_word in BR_collection:
         return cur_position    
     elif ' ' not in single_instruction:
         return cur_position             #single word a line (special case)
@@ -56,6 +69,8 @@ def convert_to_machine_lang(one_instruction,cur_position):
         return  '',cur_position
     elif 'NOT' in one_instruction:
         operator_bin = '1001'
+        whitespace_index = one_instruction.find(' ')
+        one_instruction = one_instruction[whitespace_index:]
         register_1_bin,register_2_bin = search_for_1_2_register(one_instruction)
         return operator_bin+register_1_bin+register_2_bin+'111111\n',cur_position
     elif ('LD'  in one_instruction and 'LDR' not in one_instruction) or \
@@ -82,10 +97,7 @@ def convert_to_machine_lang(one_instruction,cur_position):
             assert label in label_dict,  "label cannot be found in dictionary"
             position_moves = label_dict[label]-cur_position-1
             num_bin = deci_trans_to_imm_with_nine_digits(position_moves)
-        if 'LEA' in one_instruction :   
-            return operator_bin+register_1_bin+num_bin+'\n',cur_position-1
-        else:
-            return operator_bin+register_1_bin+num_bin+'\n',cur_position   
+        return operator_bin+register_1_bin+num_bin+'\n',cur_position   
     elif 'LDR' in one_instruction or 'STR' in one_instruction and '.STRINGZ' not in one_instruction:
         if 'LDR' in one_instruction:
             operator_bin = '0110'
@@ -108,6 +120,8 @@ def convert_to_machine_lang(one_instruction,cur_position):
             operator_bin = '0001'
         elif 'AND' in one_instruction:
             operator_bin = '0101'    
+        whitespace_index = one_instruction.find(' ')
+        one_instruction = one_instruction[whitespace_index:]    
         register_occurence = one_instruction.count('R')
         if register_occurence ==3: #e.g. ADD/AND R2,R0,R0    
             register_1_bin,register_2_bin = search_for_1_2_register(one_instruction)
@@ -137,7 +151,7 @@ def convert_to_machine_lang(one_instruction,cur_position):
         return '1111000000100001'+'\n',cur_position
     elif 'PUTS' in one_instruction:
         return '1111000000100010'+'\n',cur_position
-    elif 'IN'   in one_instruction:
+    elif 'IN'   in one_instruction and '.STRINGZ' not in one_instruction:
         return '1111000000100011'+'\n',cur_position
     elif 'PUTSP' in one_instruction:
         return '1111000000100100'+'\n',cur_position  
