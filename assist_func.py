@@ -1,6 +1,3 @@
-from cProfile import label
-
-
 def  hex_trans_to_bin_four_digits(single_hex_digit):
     """transform a single hexadecimal digit (string type) to
         a four-digit-long binary number
@@ -197,8 +194,30 @@ def BR_get_label(instruction):
     get an BR instruction and return its label(offset)(string)
     """             
     instruction = instruction.strip()
-    whitespace_index = instruction.find(' ')
-    instruction = instruction[whitespace_index:]
+    B_index     = instruction.find('BR')
+    instruction = instruction[B_index:]
+    space_index = instruction.find(' ')
+    instruction = instruction[space_index:]
     label = instruction.strip()
     return label
+
+def JSR_get_label(instruction):
+    instruction = instruction.strip()
+    J_index     = instruction.find('JSR')
+    instruction = instruction[J_index:]
+    space_index = instruction.find(' ')
+    instruction = instruction[space_index:]
+    label = instruction.strip()
+    return label
+
+def STRINGZ_get_string(instruction):
+    """
+    get an STRINGZ instruction and return the string
+    included in the instruction 
+    """
+    first_quote_index = instruction.find("\"")
+    instruction = instruction[first_quote_index:]
+    instruction = instruction.strip()
+    string = instruction[1:-1]
+    return string
 
