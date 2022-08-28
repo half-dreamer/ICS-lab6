@@ -1,3 +1,8 @@
+operators = ['ADD','AND','NOT','LD','LDR','LDI','LEA','ST','STR','STI',"TRAP",'BR'
+,'JMP','JSR','RET','.ORIG','.FILL','.BLKW','.STRINGZ','.END','HALT','GETC','OUT','PUTS'
+'IN','PUTSP','RIT','JSRR','BRn','BRz','BRp','BRnz','BRzp','BRnp','BRnzp']
+
+
 one_register_instructions = ['LD','LEA','STI','ST','LDI']
 
 def hex_trans_to_bin_somenum_digits(somenum):
@@ -147,6 +152,9 @@ def get_sign_bits(instruction):
 def some_operator_get_label(some_operator):
     def get_label_func(instruction):
         instruction = instruction.strip()
+        if is_labeled(instruction):
+            whitespace_index = instruction.find(' ')
+            instruction = instruction[whitespace_index:]
         B_index     = instruction.find(some_operator)
         instruction = instruction[B_index:]
         space_index = instruction.find(' ')
@@ -168,3 +176,13 @@ def STRINGZ_get_string(instruction):
     string = instruction[1:-1]
     return string
 
+def is_labeled(instruction):
+    instruction = instruction.strip()
+    if instruction.find(' ')>0:
+        whitespace_index = instruction.find(' ')
+        first_word  = instruction[:whitespace_index]
+        if first_word not in operators:
+            return True
+        return False   
+    else:
+        return False     

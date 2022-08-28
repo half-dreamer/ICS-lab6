@@ -3,7 +3,7 @@ from assist_func import *
 label_dict = {}   # store labels and according position;keys are labels,values are positions
 operators = ['ADD','AND','NOT','LD','LDR','LDI','LEA','ST','STR','STI',"TRAP",'BR'
 ,'JMP','JSR','RET','.ORIG','.FILL','.BLKW','.STRINGZ','.END','HALT','GETC','OUT','PUTS'
-'IN','PUTSP','RIT','JSRR']
+'IN','PUTSP','RIT','JSRR','BRn','BRz','BRp','BRnz','BRzp','BRnp','BRnzp']
 BR_collection = ['BR','BRn','BRz','BRp','BRnz','BRzp','BRnp','BRnzp']
 one_register_instruction = ['LD','LEA','STI','ST','LDI']
 
@@ -54,6 +54,10 @@ def  get_label(single_instruction,cur_position):
 
 def convert_to_machine_lang(one_instruction,cur_position):
     assert type(one_instruction)==str ,'one_insruction must be string'
+    if is_labeled(one_instruction):
+        one_instruction = one_instruction.strip()
+        whitespace_index = one_instruction.find(' ')
+        one_instruction = one_instruction[whitespace_index:]
     if '.ORIG' in one_instruction:
         x_index = one_instruction.rfind('x')
         first  = hex_trans_to_bin_four_digits(one_instruction[x_index+1])
@@ -141,19 +145,6 @@ def convert_to_machine_lang(one_instruction,cur_position):
         hexa_num_str = search_for_hexa_num(one_instruction)
         num_bin      = hex_trans_to_imm_with_eight_digits(hexa_num_str)
         return operator_bin+'0000'+num_bin+'\n',cur_position
-#trap condition(special form)
-    elif 'GETC' in one_instruction:
-        return '1111000000100000'+'\n',cur_position
-    elif 'OUT'  in one_instruction:
-        return '1111000000100001'+'\n',cur_position
-    elif 'PUTS' in one_instruction:
-        return '1111000000100010'+'\n',cur_position
-    elif 'IN'   in one_instruction and '.STRINGZ' not in one_instruction:
-        return '1111000000100011'+'\n',cur_position
-    elif 'PUTSP' in one_instruction:
-        return '1111000000100100'+'\n',cur_position  
-    elif 'HALT' in one_instruction:
-        return '1111000000100101'+'\n',cur_position 
     elif 'BR' in one_instruction:
         operator_bin = '0000'
         sign_bin = get_sign_bits(one_instruction)
@@ -226,6 +217,19 @@ def convert_to_machine_lang(one_instruction,cur_position):
             cur_position += 1
         result += '0000000000000000'+'\n'     
         return result,cur_position
+#trap condition(special form)
+    elif 'GETC' in one_instruction:
+        return '1111000000100000'+'\n',cur_position
+    elif 'OUT'  in one_instruction:
+        return '1111000000100001'+'\n',cur_position
+    elif 'PUTS' in one_instruction:
+        return '1111000000100010'+'\n',cur_position
+    elif 'IN'   in one_instruction and '.STRINGZ' not in one_instruction:
+        return '1111000000100011'+'\n',cur_position
+    elif 'PUTSP' in one_instruction:
+        return '1111000000100100'+'\n',cur_position  
+    elif 'HALT' in one_instruction:
+        return '1111000000100101'+'\n',cur_position         
     else :
         return '',cur_position-1   # empty line
     
