@@ -1,12 +1,9 @@
-# transforming functions
 from assist_func import *
 
-label_dict = {}   # store labels and according position
-#keys are labels,values are positions
+label_dict = {}   # store labels and according position;keys are labels,values are positions
 operators = ['ADD','AND','NOT','LD','LDR','LDI','LEA','ST','STR','STI',"TRAP",'BR'
 ,'JMP','JSR','RET','.ORIG','.FILL','.BLKW','.STRINGZ','.END','HALT','GETC','OUT','PUTS'
 'IN','PUTSP','RIT','JSRR']
-#Note:in operators,'.STRINGZ' may be wrong
 BR_collection = ['BR','BRn','BRz','BRp','BRnz','BRzp','BRnp','BRnzp']
 one_register_instruction = ['LD','LEA','STI','ST','LDI']
 
