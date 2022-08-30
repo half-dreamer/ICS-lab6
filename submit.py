@@ -1,3 +1,6 @@
+
+
+
 operators = ['ADD','AND','NOT','LD','LDR','LDI','LEA','ST','STR','STI',"TRAP",'BR'
 ,'JMP','JSR','RET','.ORIG','.FILL','.BLKW','.STRINGZ','.END','HALT','GETC','OUT','PUTS'
 'IN','PUTSP','RIT','JSRR','BRn','BRz','BRp','BRnz','BRzp','BRnp','BRnzp']
@@ -55,6 +58,13 @@ deci_trans_to_imm_with_six_digits  = deci_trans_to_imm_with_somenum_digits(6)
 deci_trans_to_imm_with_nine_digits = deci_trans_to_imm_with_somenum_digits(9)
 deci_trans_to_imm_with_eleven_digits = deci_trans_to_imm_with_somenum_digits(11)
 deci_trans_to_imm_with_sixteen_digits = deci_trans_to_imm_with_somenum_digits(16)
+
+def JSRR_search_for_register(instruction):
+    R_index = instruction.find('R') 
+    instruction = instruction[R_index:]
+    register = instruction[1]
+    register_bin = hex_trans_to_bin_three_digits(register)
+    return register_bin
 
 def search_for_1_register(instruction):
     """
@@ -187,9 +197,12 @@ def is_labeled(instruction):
     else:
         return False     
 
+ 
 
 label_dict = {}   # store labels and according position;keys are labels,values are positions
-
+operators = ['ADD','AND','NOT','LD','LDR','LDI','LEA','ST','STR','STI',"TRAP",'BR'
+,'JMP','JSR','RET','.ORIG','.FILL','.BLKW','.STRINGZ','.END','HALT','GETC','OUT','PUTS'
+'IN','PUTSP','RIT','JSRR','BRn','BRz','BRp','BRnz','BRzp','BRnp','BRnzp']
 BR_collection = ['BR','BRn','BRz','BRp','BRnz','BRzp','BRnp','BRnzp']
 one_register_instruction = ['LD','LEA','STI','ST','LDI']
 
@@ -331,19 +344,6 @@ def convert_to_machine_lang(one_instruction,cur_position):
         hexa_num_str = search_for_hexa_num(one_instruction)
         num_bin      = hex_trans_to_imm_with_eight_digits(hexa_num_str)
         return operator_bin+'0000'+num_bin+'\n',cur_position
-#trap condition(special form)
-    elif 'GETC' in one_instruction:
-        return '1111000000100000'+'\n',cur_position
-    elif 'OUT'  in one_instruction:
-        return '1111000000100001'+'\n',cur_position
-    elif 'PUTS' in one_instruction:
-        return '1111000000100010'+'\n',cur_position
-    elif 'IN'   in one_instruction and '.STRINGZ' not in one_instruction:
-        return '1111000000100011'+'\n',cur_position
-    elif 'PUTSP' in one_instruction:
-        return '1111000000100100'+'\n',cur_position  
-    elif 'HALT' in one_instruction:
-        return '1111000000100101'+'\n',cur_position 
     elif 'BR' in one_instruction:
         operator_bin = '0000'
         sign_bin = get_sign_bits(one_instruction)
@@ -383,7 +383,7 @@ def convert_to_machine_lang(one_instruction,cur_position):
         operator_bin = '0100'
         new_index    = one_instruction.find('R')
         one_instruction = one_instruction[(new_index+2):]
-        register_1_bin = search_for_1_register(one_instruction)
+        register_1_bin = JSRR_search_for_register(one_instruction)
         return operator_bin+'000'+register_1_bin+'000000'+'\n',cur_position
     elif 'RTI' in one_instruction:
         return '1000000000000000'+'\n',cur_position  
@@ -416,10 +416,22 @@ def convert_to_machine_lang(one_instruction,cur_position):
             cur_position += 1
         result += '0000000000000000'+'\n'     
         return result,cur_position
+#trap condition(special form)
+    elif 'GETC' in one_instruction:
+        return '1111000000100000'+'\n',cur_position
+    elif 'OUT'  in one_instruction:
+        return '1111000000100001'+'\n',cur_position
+    elif 'IN'   in one_instruction and '.STRINGZ' not in one_instruction:
+        return '1111000000100011'+'\n',cur_position
+    elif 'PUTSP' in one_instruction:
+        return '1111000000100100'+'\n',cur_position  
+    elif 'PUTS' in one_instruction:
+        return '1111000000100010'+'\n',cur_position    
+    elif 'HALT' in one_instruction:
+        return '1111000000100101'+'\n',cur_position         
     else :
         return '',cur_position-1   # empty line
     
-
 ##input part
 
 one_line = ''

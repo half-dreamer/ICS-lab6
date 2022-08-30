@@ -182,9 +182,9 @@ def convert_to_machine_lang(one_instruction,cur_position):
 
     elif 'JSRR' in one_instruction:   
         operator_bin = '0100'
-        new_index    = one_instruction.find('R')
-        one_instruction = one_instruction[(new_index+2):]
-        register_1_bin = search_for_1_register(one_instruction)
+        new_index    = one_instruction.find('JSRR')
+        one_instruction = one_instruction[(new_index+4):]
+        register_1_bin = JSRR_search_for_register(one_instruction)
         return operator_bin+'000'+register_1_bin+'000000'+'\n',cur_position
     elif 'RTI' in one_instruction:
         return '1000000000000000'+'\n',cur_position  
@@ -222,15 +222,14 @@ def convert_to_machine_lang(one_instruction,cur_position):
         return '1111000000100000'+'\n',cur_position
     elif 'OUT'  in one_instruction:
         return '1111000000100001'+'\n',cur_position
-    elif 'PUTS' in one_instruction:
-        return '1111000000100010'+'\n',cur_position
     elif 'IN'   in one_instruction and '.STRINGZ' not in one_instruction:
         return '1111000000100011'+'\n',cur_position
     elif 'PUTSP' in one_instruction:
         return '1111000000100100'+'\n',cur_position  
     elif 'HALT' in one_instruction:
-        return '1111000000100101'+'\n',cur_position         
+        return '1111000000100101'+'\n',cur_position    
+    elif 'PUTS' in one_instruction:         #attention:the last bug is the improper code order of 'puts' and 'putsp' 
+        return '1111000000100010'+'\n',cur_position     
     else :
         return '',cur_position-1   # empty line
     
-

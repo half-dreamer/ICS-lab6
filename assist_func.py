@@ -1,3 +1,6 @@
+from atexit import register
+
+
 operators = ['ADD','AND','NOT','LD','LDR','LDI','LEA','ST','STR','STI',"TRAP",'BR'
 ,'JMP','JSR','RET','.ORIG','.FILL','.BLKW','.STRINGZ','.END','HALT','GETC','OUT','PUTS'
 'IN','PUTSP','RIT','JSRR','BRn','BRz','BRp','BRnz','BRzp','BRnp','BRnzp']
@@ -55,6 +58,13 @@ deci_trans_to_imm_with_six_digits  = deci_trans_to_imm_with_somenum_digits(6)
 deci_trans_to_imm_with_nine_digits = deci_trans_to_imm_with_somenum_digits(9)
 deci_trans_to_imm_with_eleven_digits = deci_trans_to_imm_with_somenum_digits(11)
 deci_trans_to_imm_with_sixteen_digits = deci_trans_to_imm_with_somenum_digits(16)
+
+def JSRR_search_for_register(instruction):
+    R_index = instruction.find('R') 
+    instruction = instruction[R_index:]
+    register = instruction[1]
+    register_bin = hex_trans_to_bin_three_digits(register)
+    return register_bin
 
 def search_for_1_register(instruction):
     """
